@@ -28,8 +28,8 @@ public class SwaggerConfig {
 
     private ApiInfo metaInfo(){
         ApiInfo apiInfo =  new ApiInfo(
-                "ATM",
-                "ATM Simulator Spring boot project",
+                "AtmData",
+                "AtmData Simulator Spring boot project",
                 "1.0",
                 ".",
                 new Contact("Lena Sargsyan",".",

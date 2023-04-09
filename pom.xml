@@ -9,7 +9,7 @@
 		<relativePath/>
 	</parent>
 
-	<groupId>com.atm</groupId>
+	<groupId>com.atmData</groupId>
 	<artifactId>simulator</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>simulator</name>

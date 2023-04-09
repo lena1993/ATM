@@ -1,14 +1,15 @@
 package com.atm.simulator.services;
 
-//import com.atm.simulator.ApplicationProperties;
+import com.atm.simulator.ApplicationProperties;
 import com.atm.simulator.CardValidation;
-import com.atm.simulator.allException.NullCardException;
+import com.atm.simulator.exception.NullCardException;
 import com.atm.simulator.domain.BankCardStorage;
-import com.atm.simulator.model.ATM;
+import com.atm.simulator.model.AtmData;
 import com.atm.simulator.model.Card;
+import com.fasterxml.jackson.databind.util.JSONPObject;
+import com.google.gson.JsonObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
@@ -30,172 +31,134 @@ public class AtmService {
     @Autowired
     RestTemplate restTemplate;
 
-    /*@Autowired
-    MessageSource messageSource;*/
+    @Autowired
+    MessageSource messageSource;
 
-   // ApplicationProperties applicationProperties = new ApplicationProperties(messageSource);
 
-//    @Autowired
-//    ApplicationProperties applicationProperties;
+    @Autowired
+    ApplicationProperties applicationProperties;
 
     public ResponseEntity checkCard(Card card) throws HttpServerErrorException {
-//        System.out.println(applicationProperties.BANK_URL);
+        //System.out.println(applicationProperties.BANK_URL);
         /*Locale locale = LocaleContextHolder.getLocale();
         messageSource.getMessage("BANK_URL",null, locale);*/
 
-        if(cardValidation.isValid(card)){
-
+        if(cardValidation.isValid(card)) {
             HttpHeaders headers = new HttpHeaders();
             headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
             HttpEntity<Card> entity = new HttpEntity<Card>(card,headers);
 
-
-          /*ResponseEntity response = restTemplate.exchange(
-                  applicationProperties.BANK_URL.concat(applicationProperties.CHECK_CARD),
-                  HttpMethod.POST, entity, String.class);*/
-
-            ResponseEntity response = restTemplate.exchange("http://localhost:8088/bank/checkCard",
+            ResponseEntity response = restTemplate.exchange(applicationProperties.BANK_URL.concat(applicationProperties.CHECK_CARD),
                   HttpMethod.POST, entity, String.class);
 
-            if(response.getStatusCode() == HttpStatus.OK){
+            if(response.getStatusCode() == HttpStatus.OK) {
                 bankCardStorage.putCard(card);
-
                 return new ResponseEntity(response.getBody(), HttpStatus.OK);
-            }else{
-                //return new ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR);
-
-                throw new HttpServerErrorException(response.getStatusCode(), "message1");
+            }else {
+                throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_CARD);
             }
-        }else{
-            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "message2");
+        }else {
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_CARD);
         }
-        //throw new NoSuchElementException();
-
-        /*HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-        HttpEntity<Card> entity = new HttpEntity<Card>(card,headers);
-
-        ResponseEntity response = restTemplate.exchange(
-                "http://localhost:8080/actuator/shutdown", HttpMethod.POST, entity, String.class);*/
-
-       /* String command =
-                "curl -X POST http://localhost:8080/actuator/shutdown";
-        ProcessBuilder processBuilder = new ProcessBuilder(command.split(" "));
-*/
-        //return new ResponseEntity(messageSource.getMessage("notValidCard",null, locale), HttpStatus.INTERNAL_SERVER_ERROR);
-
-        //return new ResponseEntity("notValidCard", HttpStatus.INTERNAL_SERVER_ERROR);
-
-
-
     }
 
-    public ResponseEntity checkPinCode(ATM atm) throws HttpServerErrorException, NullCardException {
 
-       // Locale locale = LocaleContextHolder.getLocale();
+    public ResponseEntity checkPinCode(AtmData atmData) throws HttpServerErrorException, NullCardException {
 
-        if(atm.getPin().length() == LENGTH_OF_PIN_CODE) {
+        if( atmData.getAuthenticationType() == 1) {
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-            HttpEntity<ATM> entity = new HttpEntity<ATM>(atm, headers);
+            if (atmData.getPin().length() == LENGTH_OF_PIN_CODE) {
 
-            ResponseEntity response = restTemplate.exchange(
-                    "http://localhost:8088/bank/checkPin", HttpMethod.POST, entity, String.class);
+                HttpHeaders headers = new HttpHeaders();
+                headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+                HttpEntity<AtmData> entity = new HttpEntity<AtmData>(atmData, headers);
 
-            if (response.getStatusCode() == HttpStatus.OK) {
-                Card card = bankCardStorage.checkCardExistence(atm.getPan());
-                if(card != null){
+                ResponseEntity response = restTemplate.exchange(
+                        applicationProperties.BANK_URL.concat(applicationProperties.CHECK_PIN), HttpMethod.POST, entity, String.class);
 
-                    //String msg = messageSource.getMessage("CheckBalance",null, locale);
-
-                    return new ResponseEntity(response.getBody(), HttpStatus.OK);
+                if (response.getStatusCode() == HttpStatus.OK) {
+                    Card card = bankCardStorage.checkCardExistence(atmData.getPan());
+                    if (card != null) {
+                        return new ResponseEntity(response.getBody(), HttpStatus.OK);
+                    }
+                } else {
+                    throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_PIN);
                 }
-            }else{
-                //return new ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR);
-
-                throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "message2");
             }
 
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_PIN);
         }
 
-        //String msg = messageSource.getMessage("IncorrectPinCode",null, locale);
+        else if( atmData.getAuthenticationType() == 2) {
 
-        //return new ResponseEntity(msg, HttpStatus.BAD_REQUEST);
+                HttpHeaders headers = new HttpHeaders();
+                headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+                HttpEntity<AtmData> entity = new HttpEntity<AtmData>(atmData, headers);
 
-        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "message2");
+                ResponseEntity response = restTemplate.exchange(
+                        applicationProperties.BANK_URL.concat(applicationProperties.CHECK_FINGERPRINT), HttpMethod.POST, entity, String.class);
 
+                if (response.getStatusCode() == HttpStatus.OK) {
+                    Card card = bankCardStorage.checkCardExistence(atmData.getPan());
+                    if (card != null) {
+                        return new ResponseEntity(response.getBody(), HttpStatus.OK);
+                    }
+                } else {
+                    throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_FINGERPRINT);
+                }
+
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_FINGERPRINT);
+        }
+
+        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_FINGERPRINT);
     }
 
-    public ResponseEntity checkBalance(String token) throws HttpServerErrorException{
-
-        //Locale locale = LocaleContextHolder.getLocale();
-
+    public ResponseEntity checkBalance(String token) throws HttpServerErrorException {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+
         Map<String, String> param = new HashMap<>();
         param.put("token", token);
         HttpEntity<Map> entity = new HttpEntity<Map>(param, headers);
 
         ResponseEntity response = restTemplate.exchange(
-                "http://localhost:8088/bank/checkBalance", HttpMethod.POST, entity, String.class);
+                applicationProperties.BANK_URL.concat(applicationProperties.CHECK_BALANCE), HttpMethod.POST, entity, String.class);
 
         if (response.getStatusCode() == HttpStatus.OK) {
-
-           /* headers.add(messageSource.getMessage("takeMoney",null, locale), response.getHeaders().get("cardToken").get(0));
-            headers.add(messageSource.getMessage("balance",null, locale), response.getBody().toString());
-
-            System.out.println(headers);*/
-
             return new ResponseEntity(response.getBody(), HttpStatus.OK);
         }
 
-
-        //return new ResponseEntity(messageSource.getMessage("incorrectToken",null, locale), HttpStatus.BAD_REQUEST);
-
-        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "message2");
-
+        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.FAIL_GET_BALANCE);
     }
 
-
-    public ResponseEntity withdrawMoney(String token, Integer amount) throws HttpServerErrorException{
-        //Locale locale = LocaleContextHolder.getLocale();
-
+    public ResponseEntity withdrawMoney(String token, Integer amount) throws HttpServerErrorException {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+
         Map<String, String> param = new HashMap<>();
         param.put("token", token);
         param.put("amount", amount.toString());
         HttpEntity<Map> entity = new HttpEntity<Map>(param, headers);
 
-        ResponseEntity response = restTemplate.exchange(
-                "http://localhost:8088/bank/cashOut", HttpMethod.POST, entity, String.class);
+        ResponseEntity<JsonObject> response = restTemplate.exchange(
+                applicationProperties.BANK_URL.concat(applicationProperties.CASH_OUT), HttpMethod.POST, entity, JsonObject.class);
 
         if (response.getStatusCode() == HttpStatus.OK) {
            // removeCardFromAtm(response.getBody());
 //            Gson gson = new Gson();
 //            String content = gson.toJson(response.getBody());
 //            System.out.println(content);
-
-
             return new ResponseEntity(response.getBody(), HttpStatus.OK);
         }
 
         //removeCardFromAtm(response.getHeaders().get("pan").get(0));
-        //return new ResponseEntity(messageSource.getMessage("incorrectToken",null, locale), HttpStatus.BAD_REQUEST);
-
-        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "message2");
+        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.FAIL_GET_MONEY);
     }
 
-
-    public ResponseEntity removeCardFromAtm(String pan){
+    public ResponseEntity removeCardFromAtm(String pan) {
         bankCardStorage.removeCard(pan);
-
-        //Locale locale = LocaleContextHolder.getLocale();
 
         //return new ResponseEntity(pan + messageSource.getMessage("removedCard",null, locale), HttpStatus.OK);
         return new ResponseEntity(pan, HttpStatus.OK);
-
     }
-
 }

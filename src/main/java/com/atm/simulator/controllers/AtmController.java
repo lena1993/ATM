@@ -1,7 +1,7 @@
 package com.atm.simulator.controllers;
 
-import com.atm.simulator.allException.NullCardException;
-import com.atm.simulator.model.ATM;
+import com.atm.simulator.exception.NullCardException;
+import com.atm.simulator.model.AtmData;
 import com.atm.simulator.model.Card;
 import com.atm.simulator.services.AtmService;
 import io.swagger.annotations.Api;
@@ -12,17 +12,18 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/atm")
-@Api(value = "hello atm")
+@Api(value = "atm")
 public class AtmController {
 
     @Autowired
     AtmService atmService;
 
     @PostMapping("/insertCard")
-    public ResponseEntity insertCard(@RequestBody Card card){
+    public ResponseEntity insertCard(@RequestBody Card card) {
+
         ResponseEntity response = atmService.checkCard(card);
 
-        if(response.getStatusCode() == HttpStatus.OK){
+        if(response.getStatusCode() == HttpStatus.OK) {
             return new ResponseEntity(response, HttpStatus.OK);
         }
         return new ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -30,20 +31,20 @@ public class AtmController {
 
 
     @PostMapping("/enterPin")
-    public ResponseEntity enterPin(@RequestBody ATM atm) throws NullCardException {
-        ResponseEntity response = atmService.checkPinCode(atm);
+    public ResponseEntity enterPin(@RequestBody AtmData atmData) throws NullCardException {
+        ResponseEntity response = atmService.checkPinCode(atmData);
 
-        if(response.getStatusCode() == HttpStatus.OK){
+        if(response.getStatusCode() == HttpStatus.OK) {
             return new ResponseEntity(response, HttpStatus.OK);
         }
         return new ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @PostMapping("/balance")
-    public ResponseEntity balance(@RequestParam("token") String token){
+    public ResponseEntity balance(@RequestParam("token") String token) {
         ResponseEntity response = atmService.checkBalance(token);
 
-        if(response.getStatusCode() == HttpStatus.OK){
+        if(response.getStatusCode() == HttpStatus.OK) {
             return new ResponseEntity(response, HttpStatus.OK);
         }
         return new ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -53,7 +54,7 @@ public class AtmController {
     public ResponseEntity cashOut(@RequestParam("token") String token, @RequestParam("amount") Integer amount){
         ResponseEntity response = atmService.withdrawMoney(token, amount);
 
-        if(response.getStatusCode() == HttpStatus.OK){
+        if(response.getStatusCode() == HttpStatus.OK) {
             return new ResponseEntity(response, HttpStatus.OK);
         }
         return new ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -61,7 +62,7 @@ public class AtmController {
 
 
     @PostMapping("/removeCard")
-    public ResponseEntity removeCard(@RequestParam("pan") String pan){
+    public ResponseEntity removeCard(@RequestParam("pan") String pan) {
         return new ResponseEntity(atmService.removeCardFromAtm(pan), HttpStatus.OK);
     }
 
