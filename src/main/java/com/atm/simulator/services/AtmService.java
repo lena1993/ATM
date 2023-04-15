@@ -5,11 +5,10 @@ import com.atm.simulator.CardValidation;
 import com.atm.simulator.exception.NullCardException;
 import com.atm.simulator.domain.BankCardStorage;
 import com.atm.simulator.model.AtmData;
+import com.atm.simulator.model.AuthType;
 import com.atm.simulator.model.Card;
-import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.google.gson.JsonObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
@@ -32,16 +31,9 @@ public class AtmService {
     RestTemplate restTemplate;
 
     @Autowired
-    MessageSource messageSource;
-
-
-    @Autowired
     ApplicationProperties applicationProperties;
 
     public ResponseEntity checkCard(Card card) throws HttpServerErrorException {
-        //System.out.println(applicationProperties.BANK_URL);
-        /*Locale locale = LocaleContextHolder.getLocale();
-        messageSource.getMessage("BANK_URL",null, locale);*/
 
         if(cardValidation.isValid(card)) {
             HttpHeaders headers = new HttpHeaders();
@@ -62,52 +54,53 @@ public class AtmService {
         }
     }
 
+    private ResponseEntity check(AtmData atmData) throws HttpServerErrorException, NullCardException {
 
-    public ResponseEntity checkPinCode(AtmData atmData) throws HttpServerErrorException, NullCardException {
-
-        if( atmData.getAuthenticationType() == 1) {
-
-            if (atmData.getPin().length() == LENGTH_OF_PIN_CODE) {
-
-                HttpHeaders headers = new HttpHeaders();
-                headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-                HttpEntity<AtmData> entity = new HttpEntity<AtmData>(atmData, headers);
-
-                ResponseEntity response = restTemplate.exchange(
-                        applicationProperties.BANK_URL.concat(applicationProperties.CHECK_PIN), HttpMethod.POST, entity, String.class);
-
-                if (response.getStatusCode() == HttpStatus.OK) {
-                    Card card = bankCardStorage.checkCardExistence(atmData.getPan());
-                    if (card != null) {
-                        return new ResponseEntity(response.getBody(), HttpStatus.OK);
-                    }
-                } else {
-                    throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_PIN);
-                }
-            }
-
+        if (atmData.getPinOrFingerprint()=="PIN" && atmData.getPinOrFingerprint().length() != LENGTH_OF_PIN_CODE){
             throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_PIN);
         }
 
-        else if( atmData.getAuthenticationType() == 2) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 
-                HttpHeaders headers = new HttpHeaders();
-                headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-                HttpEntity<AtmData> entity = new HttpEntity<AtmData>(atmData, headers);
+            Map<String, String> param = new HashMap<>();
+            param.put("authenticationType", atmData.getAuthenticationType());
+            param.put("pinOrFingerprint", atmData.getPinOrFingerprint());
+            param.put("pan", atmData.getPan());
+            HttpEntity<Map> entity = new HttpEntity<Map>(param, headers);
 
-                ResponseEntity response = restTemplate.exchange(
-                        applicationProperties.BANK_URL.concat(applicationProperties.CHECK_FINGERPRINT), HttpMethod.POST, entity, String.class);
 
-                if (response.getStatusCode() == HttpStatus.OK) {
-                    Card card = bankCardStorage.checkCardExistence(atmData.getPan());
-                    if (card != null) {
-                        return new ResponseEntity(response.getBody(), HttpStatus.OK);
-                    }
-                } else {
-                    throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_FINGERPRINT);
+            ResponseEntity response = restTemplate.exchange(
+                    applicationProperties.BANK_URL.concat(applicationProperties.CHECK_PIN), HttpMethod.POST, entity, String.class);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                Card card = bankCardStorage.checkCardExistence(atmData.getPan());
+                if (card != null) {
+                    return new ResponseEntity(response.getBody(), HttpStatus.OK);
                 }
+            } else {
+                throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_PIN);
+            }
 
-            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_FINGERPRINT);
+        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_PIN);
+    }
+
+
+    public ResponseEntity checkPinCode(AtmData atmData) throws HttpServerErrorException, NullCardException {
+
+        String authType = AuthType.valueOf(atmData.getAuthenticationType()).toString();
+
+        ResponseEntity t= null;
+
+        boolean isOk = false;
+
+        switch (authType){
+            case "PIN": t = check(atmData); isOk = true; break;
+            case "FINGERPRINT": t = check(atmData); isOk = true; break;
+        }
+
+        if(isOk){
+            return t;
         }
 
         throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_FINGERPRINT);
