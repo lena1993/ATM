@@ -1,24 +1,24 @@
 package com.atm.simulator.model;
 
 public class AtmData {
-    private int authenticationType;
-    private String pin;
+    private String authenticationType;
+    private String pinOrFingerprint;
     private String pan;
 
-    public String getPin() {
-        return pin;
+    public String getPinOrFingerprint() {
+        return pinOrFingerprint;
     }
 
-    public int getAuthenticationType() {
+    public String getAuthenticationType() {
         return authenticationType;
     }
 
-    public void setAuthenticationType(int authenticationType) {
+    public void setAuthenticationType(String authenticationType) {
         this.authenticationType = authenticationType;
     }
 
-    public void setPin(String pinOrFingerprint) {
-        this.pin = pin;
+    public void setPinOrFingerprint(String pinOrFingerprint) {
+        this.pinOrFingerprint = pinOrFingerprint;
     }
 
     public String getPan() {
