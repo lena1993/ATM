@@ -31,7 +31,7 @@ public class AtmController {
 
 
     @PostMapping("/enterPin")
-    public ResponseEntity enterPin(@RequestBody AtmData atmData) throws NullCardException {
+    public ResponseEntity checkPin(@RequestBody AtmData atmData) throws NullCardException {
         ResponseEntity response = atmService.checkPinCode(atmData);
 
         if(response.getStatusCode() == HttpStatus.OK) {
