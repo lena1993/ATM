@@ -1,56 +1,45 @@
 package com.atm.simulator;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.context.support.ResourceBundleMessageSource;
-import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-import org.springframework.validation.beanvalidation.MessageSourceResourceBundleLocator;
-import org.springframework.web.context.support.SpringBeanAutowiringSupport;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 
-import java.util.Locale;
-
-@Component
+@Configuration
+@PropertySource("classpath:messages.properties")
 public class ApplicationProperties {
 
 
-    public static final String BANK_URL = "http://localhost:8088/bank/";
-    public static final String CHECK_CARD = "checkCard";
-    public static final String CHECK_PIN = "checkPin";
-    public static final String CHECK_FINGERPRINT = "checkFingerprint";
-    public static final String CHECK_BALANCE = "checkBalance";
-    public static final String CASH_OUT = "cashOut";
+    @Value("${BANK_URL}")
+    public String BANK_URL;
 
-    public static final String WRONG_CARD = "The Card is not valid";
-    public static final String WRONG_PIN = "Wrong Pin code";
-    public static final String WRONG_FINGERPRINT = "Wrong Fingerprint code";
-    public static final String FAIL_GET_MONEY = "Fail to get money";
-    public static final String FAIL_GET_BALANCE = "Fail to show balance";
+    @Value("${CHECK_CARD}")
+    public String CHECK_CARD;
 
-//    private static MessageSourceResourceBundleLocator messageSource;
+    @Value("${CHECK_PIN}")
+    public String CHECK_PIN;
 
-    /*@Autowired
-    public ApplicationProperties(@NonNull MessageSource messageSource) {
-        this.messageSource = messageSource;
-    }*/
+    @Value("${CHECK_FINGERPRINT}")
+    public String CHECK_FINGERPRINT;
 
-    /*@Autowired
-    public static MessageSource messageSource;
-*/
+    @Value("${CHECK_BALANCE}")
+    public String CHECK_BALANCE;
 
+    @Value("${CASH_OUT}")
+    public String CASH_OUT;
 
+    @Value("${WRONG_CARD}")
+    public String WRONG_CARD;
 
+    @Value("${WRONG_PIN}")
+    public String WRONG_PIN;
 
-  /*  static ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+    @Value("${WRONG_FINGERPRINT}")
+    public String WRONG_FINGERPRINT;
 
-    public static Locale locale = LocaleContextHolder.getLocale();
-    //messageSource.setBasenames("lang/res");
-    //messageSource.getMessage("hello", null, Locale.ITALIAN);
+    @Value("${FAIL_GET_MONEY}")
+    public String FAIL_GET_MONEY;
 
-    public static final String BANK_URL = messageSource.getMessage("BANK_URL",null, locale);
-    //public static final String CHECK_CARD = messageSource.getMessage("CHECK_CARD",null, locale);
-*/
+    @Value("${FAIL_GET_BALANCE}")
+    public String FAIL_GET_BALANCE;
 
 }
