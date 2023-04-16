@@ -133,25 +133,23 @@ public class AtmService {
         param.put("amount", amount.toString());
         HttpEntity<Map> entity = new HttpEntity<Map>(param, headers);
 
-        ResponseEntity<JsonObject> response = restTemplate.exchange(
-                applicationProperties.BANK_URL.concat(applicationProperties.CASH_OUT), HttpMethod.POST, entity, JsonObject.class);
+        ResponseEntity<Object> response = restTemplate.exchange(
+                applicationProperties.BANK_URL.concat(applicationProperties.CASH_OUT), HttpMethod.POST, entity, Object.class);
 
         if (response.getStatusCode() == HttpStatus.OK) {
-           // removeCardFromAtm(response.getBody());
-//            Gson gson = new Gson();
-//            String content = gson.toJson(response.getBody());
-//            System.out.println(content);
+
+            String pan = ((LinkedHashMap) response.getBody()).get("pan").toString();
+            removeCardFromAtm(pan);
+
             return new ResponseEntity(response.getBody(), HttpStatus.OK);
         }
 
-        //removeCardFromAtm(response.getHeaders().get("pan").get(0));
         throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.FAIL_GET_MONEY);
     }
 
     public ResponseEntity removeCardFromAtm(String pan) {
         bankCardStorage.removeCard(pan);
 
-        //return new ResponseEntity(pan + messageSource.getMessage("removedCard",null, locale), HttpStatus.OK);
         return new ResponseEntity(pan, HttpStatus.OK);
     }
 }
