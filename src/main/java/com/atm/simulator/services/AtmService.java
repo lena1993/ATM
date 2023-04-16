@@ -90,17 +90,17 @@ public class AtmService {
 
         String authType = AuthType.valueOf(atmData.getAuthenticationType()).toString();
 
-        ResponseEntity t= null;
+        ResponseEntity result= null;
 
         boolean isOk = false;
 
         switch (authType){
-            case "PIN": t = check(atmData); isOk = true; break;
-            case "FINGERPRINT": t = check(atmData); isOk = true; break;
+            case "PIN": result = check(atmData); isOk = true; break;
+            case "FINGERPRINT": result = check(atmData); isOk = true; break;
         }
 
         if(isOk){
-            return t;
+            return result;
         }
 
         throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_FINGERPRINT);
