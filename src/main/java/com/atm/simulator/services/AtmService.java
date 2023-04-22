@@ -20,6 +20,12 @@ import java.util.*;
 public class AtmService {
 
     private final int LENGTH_OF_PIN_CODE = 4;
+    private final String AUTHENTICATION_TYPE = "authenticationType";
+    private final String PIN_OR_FINGER_PRINT = "pinOrFingerprint";
+    private final String PAN = "pan";
+    private final String PIN = "pin";
+    private final String TOKEN = "token";
+    private final String AMOUNT = "amount";
 
     @Autowired
     BankCardStorage bankCardStorage;
@@ -56,7 +62,7 @@ public class AtmService {
 
     private ResponseEntity check(AtmData atmData) throws HttpServerErrorException, NullCardException {
 
-        if (atmData.getPinOrFingerprint()=="PIN" && atmData.getPinOrFingerprint().length() != LENGTH_OF_PIN_CODE){
+        if (atmData.getPinOrFingerprint().equals(PIN) && atmData.getPinOrFingerprint().length() != LENGTH_OF_PIN_CODE){
             throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_PIN);
         }
 
@@ -64,9 +70,9 @@ public class AtmService {
             headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 
             Map<String, String> param = new HashMap<>();
-            param.put("authenticationType", atmData.getAuthenticationType());
-            param.put("pinOrFingerprint", atmData.getPinOrFingerprint());
-            param.put("pan", atmData.getPan());
+            param.put(AUTHENTICATION_TYPE, atmData.getAuthenticationType());
+            param.put(PIN_OR_FINGER_PRINT, atmData.getPinOrFingerprint());
+            param.put(PAN, atmData.getPan());
             HttpEntity<Map> entity = new HttpEntity<Map>(param, headers);
 
 
@@ -88,22 +94,20 @@ public class AtmService {
 
     public ResponseEntity checkPinCode(AtmData atmData) throws HttpServerErrorException, NullCardException {
 
-        String authType = AuthType.valueOf(atmData.getAuthenticationType()).toString();
+        AuthType authType = AuthType.valueOf(atmData.getAuthenticationType());
 
-        ResponseEntity result= null;
-
-        boolean isOk = false;
+        ResponseEntity result = null;
 
         switch (authType){
-            case "PIN": result = check(atmData); isOk = true; break;
-            case "FINGERPRINT": result = check(atmData); isOk = true; break;
+            case PIN:
+            case FINGERPRINT:
+                result = check(atmData);
+                break;
+            default:
+                    throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_FINGERPRINT);
         }
 
-        if(isOk){
-            return result;
-        }
-
-        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_FINGERPRINT);
+        return result;
     }
 
     public ResponseEntity checkBalance(String token) throws HttpServerErrorException {
@@ -111,7 +115,7 @@ public class AtmService {
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 
         Map<String, String> param = new HashMap<>();
-        param.put("token", token);
+        param.put(TOKEN, token);
         HttpEntity<Map> entity = new HttpEntity<Map>(param, headers);
 
         ResponseEntity response = restTemplate.exchange(
@@ -129,8 +133,8 @@ public class AtmService {
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 
         Map<String, String> param = new HashMap<>();
-        param.put("token", token);
-        param.put("amount", amount.toString());
+        param.put(TOKEN, token);
+        param.put(AMOUNT, amount.toString());
         HttpEntity<Map> entity = new HttpEntity<Map>(param, headers);
 
         ResponseEntity<Object> response = restTemplate.exchange(
@@ -138,7 +142,7 @@ public class AtmService {
 
         if (response.getStatusCode() == HttpStatus.OK) {
 
-            String pan = ((LinkedHashMap) response.getBody()).get("pan").toString();
+            String pan = ((LinkedHashMap) response.getBody()).get(PAN).toString();
             removeCardFromAtm(pan);
 
             return new ResponseEntity(response.getBody(), HttpStatus.OK);

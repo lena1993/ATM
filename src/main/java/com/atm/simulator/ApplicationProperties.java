@@ -39,7 +39,7 @@ public class ApplicationProperties {
     @Value("${FAIL_GET_MONEY}")
     public String FAIL_GET_MONEY;
 
-    @Value("${FAIL_GET_BALANCE}")
+    @Value("FAIL_GET_BALANCE")
     public String FAIL_GET_BALANCE;
 
 }
