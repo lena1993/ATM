@@ -2,6 +2,7 @@ package com.atm.simulator.services;
 
 import com.atm.simulator.ApplicationProperties;
 import com.atm.simulator.CardValidation;
+import com.atm.simulator.MessagesProperties;
 import com.atm.simulator.exception.NullCardException;
 import com.atm.simulator.domain.BankCardStorage;
 import com.atm.simulator.model.AtmData;
@@ -26,6 +27,7 @@ public class AtmService {
     private final String PIN = "pin";
     private final String TOKEN = "token";
     private final String AMOUNT = "amount";
+    private final String CARD_PAN = "cardPan";
 
     @Autowired
     BankCardStorage bankCardStorage;
@@ -38,6 +40,9 @@ public class AtmService {
 
     @Autowired
     ApplicationProperties applicationProperties;
+
+    @Autowired
+    MessagesProperties messagesProperties;
 
     public ResponseEntity checkCard(Card card) throws HttpServerErrorException {
 
@@ -53,17 +58,17 @@ public class AtmService {
                 bankCardStorage.putCard(card);
                 return new ResponseEntity(response.getBody(), HttpStatus.OK);
             }else {
-                throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_CARD);
+                throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.WRONG_CARD);
             }
         }else {
-            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_CARD);
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.WRONG_CARD);
         }
     }
 
     private ResponseEntity check(AtmData atmData) throws HttpServerErrorException, NullCardException {
 
         if (atmData.getPinOrFingerprint().equals(PIN) && atmData.getPinOrFingerprint().length() != LENGTH_OF_PIN_CODE){
-            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_PIN);
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.WRONG_PIN);
         }
 
             HttpHeaders headers = new HttpHeaders();
@@ -85,10 +90,10 @@ public class AtmService {
                     return new ResponseEntity(response.getBody(), HttpStatus.OK);
                 }
             } else {
-                throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_PIN);
+                throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.WRONG_PIN);
             }
 
-        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_PIN);
+        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.WRONG_PIN);
     }
 
 
@@ -104,7 +109,7 @@ public class AtmService {
                 result = check(atmData);
                 break;
             default:
-                    throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.WRONG_FINGERPRINT);
+                    throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.WRONG_FINGERPRINT);
         }
 
         return result;
@@ -125,7 +130,7 @@ public class AtmService {
             return new ResponseEntity(response.getBody(), HttpStatus.OK);
         }
 
-        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.FAIL_GET_BALANCE);
+        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.FAIL_GET_BALANCE);
     }
 
     public ResponseEntity withdrawMoney(String token, Integer amount) throws HttpServerErrorException {
@@ -142,13 +147,13 @@ public class AtmService {
 
         if (response.getStatusCode() == HttpStatus.OK) {
 
-            String pan = ((LinkedHashMap) response.getBody()).get(PAN).toString();
+            String pan = ((LinkedHashMap) response.getBody()).get(CARD_PAN).toString();
             removeCardFromAtm(pan);
 
             return new ResponseEntity(response.getBody(), HttpStatus.OK);
         }
 
-        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, applicationProperties.FAIL_GET_MONEY);
+        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.FAIL_GET_MONEY);
     }
 
     public ResponseEntity removeCardFromAtm(String pan) {

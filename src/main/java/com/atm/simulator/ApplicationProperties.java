@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
 @Configuration
-@PropertySource("classpath:messages.properties")
+@PropertySource("classpath:application.properties")
 public class ApplicationProperties {
 
 
@@ -18,28 +18,11 @@ public class ApplicationProperties {
     @Value("${CHECK_PIN}")
     public String CHECK_PIN;
 
-    @Value("${CHECK_FINGERPRINT}")
-    public String CHECK_FINGERPRINT;
-
     @Value("${CHECK_BALANCE}")
     public String CHECK_BALANCE;
 
     @Value("${CASH_OUT}")
     public String CASH_OUT;
 
-    @Value("${WRONG_CARD}")
-    public String WRONG_CARD;
-
-    @Value("${WRONG_PIN}")
-    public String WRONG_PIN;
-
-    @Value("${WRONG_FINGERPRINT}")
-    public String WRONG_FINGERPRINT;
-
-    @Value("${FAIL_GET_MONEY}")
-    public String FAIL_GET_MONEY;
-
-    @Value("FAIL_GET_BALANCE")
-    public String FAIL_GET_BALANCE;
 
 }

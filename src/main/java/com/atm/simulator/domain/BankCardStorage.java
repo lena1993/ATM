@@ -1,7 +1,9 @@
 package com.atm.simulator.domain;
 
+import com.atm.simulator.MessagesProperties;
 import com.atm.simulator.exception.NullCardException;
 import com.atm.simulator.model.Card;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -10,6 +12,9 @@ import java.util.Map;
 
 @Component
 public class BankCardStorage {
+
+    @Autowired
+    MessagesProperties messagesProperties;
     
     private Map<String, Card> validatedCard;
 
@@ -32,7 +37,7 @@ public class BankCardStorage {
         if(!card.equals(null)) {
             return card;
         } else {
-            throw new NullCardException("notValidPAN");
+            throw new NullCardException(messagesProperties.NOT_VALID_PAN);
         }
     }
 

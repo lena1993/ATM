@@ -22,18 +22,19 @@ public class CardValidation {
     @Autowired
     MessageSource messageSource;
 
+    @Autowired
+    MessagesProperties messagesProperties;
+
     private static Logger log = LoggerFactory.getLogger(CardValidation.class);
 
     public boolean isValid(Card bankCard) {
-        //Locale locale = LocaleContextHolder.getLocale();
 
         try {
             validatePan(bankCard);
             expirationValidationDate(bankCard);
             ValidateCardHolder(bankCard);
 
-            //log.info( messageSource.getMessage("validCard",null, locale), CardValidation.class);
-            log.info("validCard", CardValidation.class);
+            log.info(messagesProperties.VALID_CARD, CardValidation.class);
 
         } catch (Exception e) {
 
@@ -45,19 +46,14 @@ public class CardValidation {
     }
 
     private void validatePan(Card bankCard) throws InvalidPanException {
-        //Locale locale = LocaleContextHolder.getLocale();
 
         if (!(bankCard.getPan().matches("[0-9]+") && bankCard.getPan().length() == 16)) {
-//            log.info(messageSource.getMessage("notValidPAN",null, locale), CardValidation.class);
-//            throw new InvalidPanException(messageSource.getMessage("notValidPAN",null, locale));
-            log.info("notValidPAN", CardValidation.class);
-            throw new InvalidPanException("notValidPAN");
+            log.info(messagesProperties.NOT_VALID_PAN, CardValidation.class);
+            throw new InvalidPanException(messagesProperties.NOT_VALID_PAN);
         }
     }
 
     private void expirationValidationDate(Card bankCard) throws ExpiredCardException {
-
-        //Locale locale = LocaleContextHolder.getLocale();
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
 
@@ -67,25 +63,21 @@ public class CardValidation {
 
         YearMonth bankCardDate = YearMonth.parse(bankCard.getExpiryDate(), formatter);
 
-        int a = bankCardDate.compareTo(cardDate);
+        int checkExpDate = bankCardDate.compareTo(cardDate);
 
-        if (a < 0) {
-//            log.info(messageSource.getMessage("notValidDate",null, locale), CardValidation.class);
-//            throw new ExpiredCardException(messageSource.getMessage("notValidDate",null, locale));
-            log.info("notValidDate", CardValidation.class);
-            throw new ExpiredCardException("notValidDate");
+        if (checkExpDate < 0) {
+
+            log.info(messagesProperties.NOT_VALID_DATA, CardValidation.class);
+            throw new ExpiredCardException(messagesProperties.NOT_VALID_DATA);
         }
 
     }
 
     private void ValidateCardHolder(Card bankCard) throws InvalidCardHolder {
-        //Locale locale = LocaleContextHolder.getLocale();
 
         if (!(bankCard.getCardHolder().matches("^[a-zA-Z^w+( +w+)]*$") && bankCard.getCardHolder() != null)) {
-//            log.info(messageSource.getMessage("notValidCardHolder",null, locale), CardValidation.class);
-//            throw new InvalidCardHolder(messageSource.getMessage("notValidCardHolder",null, locale));
-            log.info("notValidCardHolder", CardValidation.class);
-            throw new InvalidCardHolder("notValidCardHolder");
+            log.info(messagesProperties.NOT_VALID_CARD_HOLDER, CardValidation.class);
+            throw new InvalidCardHolder(messagesProperties.NOT_VALID_CARD_HOLDER);
         }
     }
 
