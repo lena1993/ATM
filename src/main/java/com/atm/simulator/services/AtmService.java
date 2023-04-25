@@ -51,8 +51,8 @@ public class AtmService {
             headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
             HttpEntity<Card> entity = new HttpEntity<Card>(card,headers);
 
-            ResponseEntity response = restTemplate.exchange(applicationProperties.BANK_URL.concat(applicationProperties.CHECK_CARD),
-                  HttpMethod.POST, entity, String.class);
+            ResponseEntity<Object> response = restTemplate.exchange(applicationProperties.BANK_URL.concat(applicationProperties.CHECK_CARD),
+                  HttpMethod.POST, entity, Object.class);
 
             if(response.getStatusCode() == HttpStatus.OK) {
                 bankCardStorage.putCard(card);
@@ -81,8 +81,8 @@ public class AtmService {
             HttpEntity<Map> entity = new HttpEntity<Map>(param, headers);
 
 
-            ResponseEntity response = restTemplate.exchange(
-                    applicationProperties.BANK_URL.concat(applicationProperties.CHECK_PIN), HttpMethod.POST, entity, String.class);
+            ResponseEntity<Object> response = restTemplate.exchange(
+                    applicationProperties.BANK_URL.concat(applicationProperties.CHECK_PIN), HttpMethod.POST, entity, Object.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 Card card = bankCardStorage.checkCardExistence(atmData.getPan());
@@ -123,8 +123,8 @@ public class AtmService {
         param.put(TOKEN, token);
         HttpEntity<Map> entity = new HttpEntity<Map>(param, headers);
 
-        ResponseEntity response = restTemplate.exchange(
-                applicationProperties.BANK_URL.concat(applicationProperties.CHECK_BALANCE), HttpMethod.POST, entity, String.class);
+        ResponseEntity<Object> response = restTemplate.exchange(
+                applicationProperties.BANK_URL.concat(applicationProperties.CHECK_BALANCE), HttpMethod.POST, entity, Object.class);
 
         if (response.getStatusCode() == HttpStatus.OK) {
             return new ResponseEntity(response.getBody(), HttpStatus.OK);

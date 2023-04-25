@@ -5,6 +5,12 @@ public class AtmData {
     private String pinOrFingerprint;
     private String pan;
 
+    public AtmData(String authenticationType, String pinOrFingerprint, String pan) {
+        this.authenticationType = authenticationType;
+        this.pinOrFingerprint = pinOrFingerprint;
+        this.pan = pan;
+    }
+
     public String getPinOrFingerprint() {
         return pinOrFingerprint;
     }
