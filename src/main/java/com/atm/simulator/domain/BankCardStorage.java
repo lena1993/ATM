@@ -23,12 +23,24 @@ public class BankCardStorage {
     }
 
 
-    public synchronized void putCard(Card card) {
+    public synchronized Boolean putCard(Card card) {
         validatedCard.put(card.getPan(), card);
+
+        if(validatedCard.get(card.getPan()) == null){
+            return false;
+        }
+
+        return true;
+
     }
 
-    public void removeCard(String pan){
+    public boolean removeCard(String pan){
         validatedCard.remove(pan);
+
+        if(validatedCard.get(pan)==null){
+            return true;
+        }
+        return false;
     }
 
     public Card checkCardExistence(String cardPan) throws NullCardException {

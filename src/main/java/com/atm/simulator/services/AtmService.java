@@ -44,7 +44,7 @@ public class AtmService {
     @Autowired
     MessagesProperties messagesProperties;
 
-    public ResponseEntity checkCard(Card card) throws HttpServerErrorException {
+    public Object checkCard(Card card) throws HttpServerErrorException  {
 
         if(cardValidation.isValid(card)) {
             HttpHeaders headers = new HttpHeaders();
@@ -54,18 +54,20 @@ public class AtmService {
             ResponseEntity<Object> response = restTemplate.exchange(applicationProperties.BANK_URL.concat(applicationProperties.CHECK_CARD),
                   HttpMethod.POST, entity, Object.class);
 
-            if(response.getStatusCode() == HttpStatus.OK) {
-                bankCardStorage.putCard(card);
-                return new ResponseEntity(response.getBody(), HttpStatus.OK);
+            if(response == null){
+                return response;
+            }else if(response.getStatusCode() == HttpStatus.OK && bankCardStorage.putCard(card)) {
+                return response.getBody();
             }else {
                 throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.WRONG_CARD);
             }
+
         }else {
             throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.WRONG_CARD);
         }
     }
 
-    private ResponseEntity check(AtmData atmData) throws HttpServerErrorException, NullCardException {
+    private Object check(AtmData atmData) throws HttpServerErrorException, NullCardException {
 
         if (atmData.getPinOrFingerprint().equals(PIN) && atmData.getPinOrFingerprint().length() != LENGTH_OF_PIN_CODE){
             throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.WRONG_PIN);
@@ -84,24 +86,28 @@ public class AtmService {
             ResponseEntity<Object> response = restTemplate.exchange(
                     applicationProperties.BANK_URL.concat(applicationProperties.CHECK_PIN), HttpMethod.POST, entity, Object.class);
 
-            if (response.getStatusCode() == HttpStatus.OK) {
-                Card card = bankCardStorage.checkCardExistence(atmData.getPan());
-                if (card != null) {
-                    return new ResponseEntity(response.getBody(), HttpStatus.OK);
-                }
-            } else {
-                throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.WRONG_PIN);
+        if(response == null){
+
+            return response;
+
+        } else if (response.getStatusCode() == HttpStatus.OK) {
+            Card card = bankCardStorage.checkCardExistence(atmData.getPan());
+            if (card != null) {
+                return response.getBody();
             }
+        } else {
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.WRONG_PIN);
+        }
 
         throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.WRONG_PIN);
     }
 
 
-    public ResponseEntity checkPinCode(AtmData atmData) throws HttpServerErrorException, NullCardException {
+    public Object checkPinCode(AtmData atmData) throws HttpServerErrorException, NullCardException {
 
         AuthType authType = AuthType.valueOf(atmData.getAuthenticationType());
 
-        ResponseEntity result = null;
+        Object result = null;
 
         switch (authType){
             case PIN:
@@ -115,7 +121,7 @@ public class AtmService {
         return result;
     }
 
-    public ResponseEntity checkBalance(String token) throws HttpServerErrorException {
+    public Object checkBalance(String token) throws HttpServerErrorException {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 
@@ -126,14 +132,16 @@ public class AtmService {
         ResponseEntity<Object> response = restTemplate.exchange(
                 applicationProperties.BANK_URL.concat(applicationProperties.CHECK_BALANCE), HttpMethod.POST, entity, Object.class);
 
-        if (response.getStatusCode() == HttpStatus.OK) {
-            return new ResponseEntity(response.getBody(), HttpStatus.OK);
+        if(response == null){
+            return response;
+        }else if (response.getStatusCode() == HttpStatus.OK) {
+            return response.getBody();
         }
 
         throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.FAIL_GET_BALANCE);
     }
 
-    public ResponseEntity withdrawMoney(String token, Integer amount) throws HttpServerErrorException {
+    public Object withdrawMoney(String token, Integer amount) throws HttpServerErrorException {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 
@@ -145,20 +153,24 @@ public class AtmService {
         ResponseEntity<Object> response = restTemplate.exchange(
                 applicationProperties.BANK_URL.concat(applicationProperties.CASH_OUT), HttpMethod.POST, entity, Object.class);
 
-        if (response.getStatusCode() == HttpStatus.OK) {
+        if(response == null){
+            return response;
+        }if (response.getStatusCode() == HttpStatus.OK) {
 
             String pan = ((LinkedHashMap) response.getBody()).get(CARD_PAN).toString();
             removeCardFromAtm(pan);
 
-            return new ResponseEntity(response.getBody(), HttpStatus.OK);
+            return response.getBody();
         }
 
         throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.FAIL_GET_MONEY);
     }
 
     public ResponseEntity removeCardFromAtm(String pan) {
-        bankCardStorage.removeCard(pan);
+        if(bankCardStorage.removeCard(pan)){
+            return new ResponseEntity(HttpStatus.OK);
+        }
 
-        return new ResponseEntity(pan, HttpStatus.OK);
+        throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, messagesProperties.FAIL_TO_TAKE_CARD);
     }
 }

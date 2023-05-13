@@ -31,9 +31,13 @@ public class AtmController {
     @PostMapping(INSERT_CARD)
     public ResponseEntity insertCard(@RequestBody Card card) {
 
-        ResponseEntity response = atmService.checkCard(card);
+        Object response = atmService.checkCard(card);
 
-        if(response.getStatusCode() == HttpStatus.OK) {
+        /*if(((ResponseEntity) response).getStatusCode() == HttpStatus.OK) {
+            return new ResponseEntity((ResponseEntity) response, HttpStatus.OK);
+        }*/
+
+        if(response != null) {
             return new ResponseEntity(response, HttpStatus.OK);
         }
         return new ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -42,9 +46,9 @@ public class AtmController {
 
     @PostMapping(ENTER_PIN)
     public ResponseEntity checkPin(@RequestBody AtmData atmData) throws NullCardException {
-        ResponseEntity response = atmService.checkPinCode(atmData);
+        Object response = atmService.checkPinCode(atmData);
 
-        if(response.getStatusCode() == HttpStatus.OK) {
+        if(response != null) {
             return new ResponseEntity(response, HttpStatus.OK);
         }
         return new ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -52,9 +56,9 @@ public class AtmController {
 
     @PostMapping(BALANCE)
     public ResponseEntity balance(@RequestParam(TOKEN) String token) {
-        ResponseEntity response = atmService.checkBalance(token);
+        Object response = atmService.checkBalance(token);
 
-        if(response.getStatusCode() == HttpStatus.OK) {
+        if(response != null) {
             return new ResponseEntity(response, HttpStatus.OK);
         }
         return new ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -62,18 +66,24 @@ public class AtmController {
 
     @PostMapping(CASH_OUT)
     public ResponseEntity cashOut(@RequestParam(TOKEN) String token, @RequestParam(AMOUNT) Integer amount){
-        ResponseEntity response = atmService.withdrawMoney(token, amount);
+        Object response = atmService.withdrawMoney(token, amount);
 
-        if(response.getStatusCode() == HttpStatus.OK) {
+        if(response != null) {
             return new ResponseEntity(response, HttpStatus.OK);
         }
         return new ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 
-    @PostMapping("REMOVE_CARD")
+    @PostMapping(REMOVE_CARD)
     public ResponseEntity removeCard(@RequestParam(PAN) String pan) {
-        return new ResponseEntity(atmService.removeCardFromAtm(pan), HttpStatus.OK);
+
+        if(atmService.removeCardFromAtm(pan) != null) {
+            return new ResponseEntity(atmService.removeCardFromAtm(pan), HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+
+        //return new ResponseEntity(atmService.removeCardFromAtm(pan), HttpStatus.OK);
     }
 
 }

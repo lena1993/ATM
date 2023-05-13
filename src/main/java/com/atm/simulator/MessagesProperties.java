@@ -38,4 +38,7 @@ public class MessagesProperties {
     @Value("${NOT_VALID_CARD_HOLDER}")
     public String NOT_VALID_CARD_HOLDER;
 
+    @Value("${FAIL_TO_TAKE_CARD}")
+    public String FAIL_TO_TAKE_CARD;
+
 }
